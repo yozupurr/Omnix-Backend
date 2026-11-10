@@ -8,8 +8,6 @@ Universal OGFN backend written in Go.
 | --- | --- |
 | Season 1 | 1.8.1 |
 
-The client build is detected from the `User-Agent` header, so every request is resolved against its own season.
-
 ## Features
 
 - Authentication
