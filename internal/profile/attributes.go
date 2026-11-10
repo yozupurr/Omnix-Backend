@@ -1,10 +1,5 @@
 package profile
 
-var templates = map[string]func(season int) map[string]any{
-	"athena":   athena,
-	"profile0": profile0,
-}
-
 func athena(season int) map[string]any {
 	return map[string]any{
 		"season_num":     season,

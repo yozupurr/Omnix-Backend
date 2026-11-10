@@ -14,11 +14,17 @@ type handler struct {
 	sessions *sessions
 }
 
-func Register(mux *http.ServeMux, accounts *account.Store) {
+func Register(mux *http.ServeMux, accounts *account.Store) func(accessToken string) (accountID, displayName string, ok bool) {
 	h := handler{accounts: accounts, sessions: newSessions()}
 	mux.HandleFunc("POST /account/api/oauth/token", h.token)
 	mux.HandleFunc("GET /account/api/oauth/verify", h.verify)
 	mux.HandleFunc("DELETE /account/api/oauth/sessions/kill", killSessions)
+	return h.authenticate
+}
+
+func (h handler) authenticate(accessToken string) (string, string, bool) {
+	token, ok := h.sessions.find(accessToken, time.Now())
+	return token.AccountID, token.DisplayName, ok
 }
 
 func (h handler) token(w http.ResponseWriter, r *http.Request) {

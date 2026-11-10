@@ -23,6 +23,7 @@ func Register(mux *http.ServeMux) {
 	mux.HandleFunc("POST /fortnite/api/game/v2/tryPlayOnPlatform/account/{id}", tryPlayOnPlatform)
 	mux.HandleFunc("GET /fortnite/api/game/v2/enabled_features", enabledFeatures)
 	mux.HandleFunc("POST /fortnite/api/game/v2/grant_access/{id}", grantAccess)
+	mux.HandleFunc("GET /fortnite/api/game/v2/friendcodes/{id}/{platform}", friendCodes)
 }
 
 func worldInformation(w http.ResponseWriter, _ *http.Request) {
@@ -34,6 +35,10 @@ func tryPlayOnPlatform(w http.ResponseWriter, _ *http.Request) {
 }
 
 func enabledFeatures(w http.ResponseWriter, _ *http.Request) {
+	httpx.JSON(w, http.StatusOK, []any{})
+}
+
+func friendCodes(w http.ResponseWriter, _ *http.Request) {
 	httpx.JSON(w, http.StatusOK, []any{})
 }
 

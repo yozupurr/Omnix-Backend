@@ -34,17 +34,26 @@ type change struct {
 	Profile    profile `json:"profile"`
 }
 
-type response struct {
-	ProfileRevision            int      `json:"profileRevision"`
-	ProfileID                  string   `json:"profileId"`
-	ProfileChangesBaseRevision int      `json:"profileChangesBaseRevision"`
-	ProfileChanges             []change `json:"profileChanges"`
-	ProfileCommandRevision     int      `json:"profileCommandRevision"`
-	ServerTime                 string   `json:"serverTime"`
-	ResponseVersion            int      `json:"responseVersion"`
+type statModified struct {
+	ChangeType string `json:"changeType"`
+	Name       string `json:"name"`
+	Value      any    `json:"value"`
 }
 
-func newProfile(accountID, profileID string, attributes map[string]any, now time.Time) profile {
+type response struct {
+	ProfileRevision            int    `json:"profileRevision"`
+	ProfileID                  string `json:"profileId"`
+	ProfileChangesBaseRevision int    `json:"profileChangesBaseRevision"`
+	ProfileChanges             []any  `json:"profileChanges"`
+	ProfileCommandRevision     int    `json:"profileCommandRevision"`
+	ServerTime                 string `json:"serverTime"`
+	ResponseVersion            int    `json:"responseVersion"`
+}
+
+func newProfile(accountID, profileID string, attributes, items map[string]any, now time.Time) profile {
+	if items == nil {
+		items = map[string]any{}
+	}
 	timestamp := httpx.Timestamp(now)
 	return profile{
 		ID:        accountID,
@@ -53,7 +62,7 @@ func newProfile(accountID, profileID string, attributes map[string]any, now time
 		AccountID: accountID,
 		ProfileID: profileID,
 		Version:   profileVersion,
-		Items:     map[string]any{},
+		Items:     items,
 		Stats:     stats{Attributes: attributes},
 	}
 }
@@ -61,7 +70,7 @@ func newProfile(accountID, profileID string, attributes map[string]any, now time
 func newAcknowledgement(profileID string, now time.Time) response {
 	return response{
 		ProfileID:       profileID,
-		ProfileChanges:  []change{},
+		ProfileChanges:  []any{},
 		ServerTime:      httpx.Timestamp(now),
 		ResponseVersion: responseVersion,
 	}
@@ -71,8 +80,20 @@ func newResponse(p profile, now time.Time) response {
 	return response{
 		ProfileRevision: p.Revision,
 		ProfileID:       p.ProfileID,
-		ProfileChanges:  []change{{ChangeType: "fullProfileUpdate", Profile: p}},
+		ProfileChanges:  []any{change{ChangeType: "fullProfileUpdate", Profile: p}},
 		ServerTime:      httpx.Timestamp(now),
 		ResponseVersion: responseVersion,
+	}
+}
+
+func newStatUpdate(profileID, name string, value any, revision int, now time.Time) response {
+	return response{
+		ProfileRevision:            revision,
+		ProfileID:                  profileID,
+		ProfileChangesBaseRevision: revision - 1,
+		ProfileChanges:             []any{statModified{ChangeType: "statModified", Name: name, Value: value}},
+		ProfileCommandRevision:     revision,
+		ServerTime:                 httpx.Timestamp(now),
+		ResponseVersion:            responseVersion,
 	}
 }

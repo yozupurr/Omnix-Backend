@@ -4,18 +4,24 @@ import "os"
 
 const (
 	defaultPort       = "1337"
+	defaultXMPPPort   = "5222"
 	defaultStorageDir = "internal/cloudstorage"
+	defaultCatalog    = "internal/cosmetics/cosmetics.json"
 )
 
 type Config struct {
-	Addr       string
-	StorageDir string
+	Addr        string
+	XMPPAddr    string
+	StorageDir  string
+	CatalogFile string
 }
 
 func Load() Config {
 	return Config{
-		Addr:       ":" + env("PORT", defaultPort),
-		StorageDir: env("STORAGE_DIR", defaultStorageDir),
+		Addr:        ":" + env("PORT", defaultPort),
+		XMPPAddr:    ":" + env("XMPP_PORT", defaultXMPPPort),
+		StorageDir:  env("STORAGE_DIR", defaultStorageDir),
+		CatalogFile: env("CATALOG_FILE", defaultCatalog),
 	}
 }
 
