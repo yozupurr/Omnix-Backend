@@ -1,15 +1,11 @@
 package profile
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
 
 	"omnix/internal/platform/httpx"
-	"omnix/internal/version"
 )
-
-const maxCommandBody = 1 << 16
 
 type equipRequest struct {
 	SlotName        string `json:"slotName"`
@@ -18,15 +14,12 @@ type equipRequest struct {
 }
 
 func (h *handler) equip(w http.ResponseWriter, r *http.Request) {
-	profileID := r.URL.Query().Get("profileId")
-	if template, ok := templates[profileID]; !ok || !template.cosmetics {
-		httpx.OperationForbidden(profileID).Write(w)
+	if r.URL.Query().Get("profileId") != athenaProfile {
+		httpx.OperationForbidden(r.URL.Query().Get("profileId")).Write(w)
 		return
 	}
-
 	var req equipRequest
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxCommandBody)).Decode(&req); err != nil {
-		httpx.InvalidRequest.Write(w)
+	if !decode(w, r, &req) {
 		return
 	}
 	s, ok := slots[req.SlotName]
@@ -34,13 +27,13 @@ func (h *handler) equip(w http.ResponseWriter, r *http.Request) {
 		httpx.InvalidRequest.Write(w)
 		return
 	}
-	if req.ItemToSlot != "" {
-		if _, owned := h.items.forSeason(version.From(r.Context()).Season())[req.ItemToSlot]; !owned {
+	h.accounts.with(r.PathValue("id"), func(a *account) {
+		if _, owned := a.athena[req.ItemToSlot]; req.ItemToSlot != "" && !owned {
 			httpx.InvalidRequest.Write(w)
 			return
 		}
-	}
-
-	value, revision := h.loadouts.equip(r.PathValue("id"), s, req.ItemToSlot, req.IndexWithinSlot)
-	httpx.JSON(w, http.StatusOK, newStatUpdate(profileID, s.stat, value, revision, time.Now()))
+		t := newTx(a, athenaProfile)
+		t.stat(s.stat, a.equip(s, req.ItemToSlot, req.IndexWithinSlot))
+		httpx.JSON(w, http.StatusOK, t.commit(athenaProfile, nil, time.Now()))
+	})
 }

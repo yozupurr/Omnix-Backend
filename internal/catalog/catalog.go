@@ -56,10 +56,6 @@ func Save(path string, items []Item) error {
 	return os.WriteFile(path, []byte(b.String()), 0o644)
 }
 
-func (c *Catalog) Len() int {
-	return len(c.items)
-}
-
 func (c *Catalog) Available(season int) []Item {
 	n := sort.Search(len(c.items), func(i int) bool { return c.items[i].Season > season })
 	return c.items[:n]

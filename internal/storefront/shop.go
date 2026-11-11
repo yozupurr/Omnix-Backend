@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"omnix/internal/battlepass"
 	"omnix/internal/catalog"
 	"omnix/internal/platform/httpx"
 )
@@ -16,6 +17,7 @@ const (
 	dailyPurchaseHrs   = 24
 	currency           = "MtxCurrency"
 	noExpiration       = "9999-12-31T23:59:59.999Z"
+	appStores          = 10
 )
 
 var prices = map[string]map[string]int{
@@ -52,6 +54,7 @@ type offer struct {
 	CatalogGroupPriority int           `json:"catalogGroupPriority"`
 	SortPriority         int           `json:"sortPriority"`
 	Title                string        `json:"title"`
+	ShortDescription     string        `json:"shortDescription"`
 	Description          string        `json:"description"`
 	DisplayAssetPath     string        `json:"displayAssetPath"`
 	ItemGrants           []grant       `json:"itemGrants"`
@@ -81,10 +84,13 @@ type grant struct {
 	Quantity   int    `json:"quantity"`
 }
 
-func newShop(pool []catalog.Item, season int, now time.Time) shop {
+func newShop(pool []catalog.Item, season int, pass *battlepass.Season, now time.Time) shop {
 	r := currentRotation(now)
 	picked := r.pick(pool, season)
-	storefronts := make([]storefront, 0, len(sections))
+	storefronts := make([]storefront, 0, len(sections)+1)
+	if pass != nil {
+		storefronts = append(storefronts, seasonStorefront(*pass))
+	}
 	for _, s := range sections {
 		entries := make([]offer, 0, len(picked[s.name]))
 		for i, item := range picked[s.name] {
@@ -101,22 +107,29 @@ func newShop(pool []catalog.Item, season int, now time.Time) shop {
 }
 
 func newOffer(item catalog.Item, day time.Time, priority int) offer {
-	templateID := item.Type + ":" + strings.ToLower(item.ID)
+	templateID := templateIDOf(item)
 	cost := priceOf(item)
+	o := newStaticOffer(offerIDFor(templateID, day), fmt.Sprintf("[VIRTUAL]1 x %s for %d %s", item.ID, cost, currency), cost, priority)
+	o.Requirements = []requirement{{RequirementType: "DenyOnItemOwnership", RequiredID: templateID, MinQuantity: 1}}
+	o.ItemGrants = []grant{{TemplateID: templateID, Quantity: 1}}
+	return o
+}
+
+func newStaticOffer(id, devName string, cost, priority int) offer {
 	return offer{
-		OfferID:        offerID(templateID, day),
-		DevName:        fmt.Sprintf("[VIRTUAL]1 x %s for %d %s", item.ID, cost, currency),
+		OfferID:        id,
+		DevName:        devName,
 		OfferType:      "StaticPrice",
 		Prices:         []price{{CurrencyType: currency, RegularPrice: cost, FinalPrice: cost, BasePrice: cost, SaleExpiration: noExpiration}},
 		Categories:     []string{},
 		DailyLimit:     -1,
 		WeeklyLimit:    -1,
 		MonthlyLimit:   -1,
-		AppStoreID:     []string{},
-		Requirements:   []requirement{{RequirementType: "DenyOnItemOwnership", RequiredID: templateID, MinQuantity: 1}},
+		AppStoreID:     make([]string, appStores),
+		Requirements:   []requirement{},
 		MetaInfo:       []any{},
 		SortPriority:   priority,
-		ItemGrants:     []grant{{TemplateID: templateID, Quantity: 1}},
+		ItemGrants:     []grant{},
 		FulfillmentIDs: []string{},
 	}
 }
@@ -129,7 +142,11 @@ func priceOf(item catalog.Item) int {
 	return byRarity["epic"]
 }
 
-func offerID(templateID string, day time.Time) string {
+func templateIDOf(item catalog.Item) string {
+	return item.Type + ":" + strings.ToLower(item.ID)
+}
+
+func offerIDFor(templateID string, day time.Time) string {
 	sum := sha256.Sum256([]byte(day.Format(time.DateOnly) + "|" + templateID))
 	return "v2:/" + hex.EncodeToString(sum[:])
 }

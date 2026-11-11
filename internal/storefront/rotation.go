@@ -1,7 +1,9 @@
 package storefront
 
 import (
+	"maps"
 	"math/rand/v2"
+	"slices"
 	"time"
 
 	"omnix/internal/catalog"
@@ -40,7 +42,8 @@ func (r rotation) pick(pool []catalog.Item, season int) map[string][]catalog.Ite
 		}
 	}
 	rng := rand.New(rand.NewPCG(uint64(r.day.Unix()), uint64(season)))
-	for _, items := range byType {
+	for _, itemType := range slices.Sorted(maps.Keys(byType)) {
+		items := byType[itemType]
 		rng.Shuffle(len(items), func(i, j int) { items[i], items[j] = items[j], items[i] })
 	}
 	picked := make(map[string][]catalog.Item, len(sections))

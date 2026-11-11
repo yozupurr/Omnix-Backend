@@ -13,13 +13,16 @@ type Error struct {
 }
 
 var (
-	NotFound         = newError(http.StatusNotFound, "errors.com.epicgames.common.not_found", "Resource not found", 1004)
-	InvalidRequest   = newError(http.StatusBadRequest, "errors.com.epicgames.common.oauth.invalid_request", "Invalid request", 1013)
-	UnsupportedGrant = newError(http.StatusBadRequest, "errors.com.epicgames.common.oauth.unsupported_grant_type", "Unsupported grant type", 1016)
-	InvalidClient    = newError(http.StatusUnauthorized, "errors.com.epicgames.common.oauth.invalid_client", "Invalid client credentials", 18033)
-	AccountNotFound  = newError(http.StatusNotFound, "errors.com.epicgames.account.account_not_found", "Account not found", 18007)
-	InvalidToken     = newError(http.StatusUnauthorized, "errors.com.epicgames.common.authentication.token_verification_failed", "Token verification failed", 1014)
-	ValidationFailed = newError(http.StatusBadRequest, "errors.com.epicgames.validation.validation_failed", "Validation failed", 1040)
+	NotFound           = newError(http.StatusNotFound, "errors.com.epicgames.common.not_found", "Resource not found", 1004)
+	InvalidRequest     = newError(http.StatusBadRequest, "errors.com.epicgames.common.oauth.invalid_request", "Invalid request", 1013)
+	UnsupportedGrant   = newError(http.StatusBadRequest, "errors.com.epicgames.common.oauth.unsupported_grant_type", "Unsupported grant type", 1016)
+	InvalidClient      = newError(http.StatusUnauthorized, "errors.com.epicgames.common.oauth.invalid_client", "Invalid client credentials", 18033)
+	AccountNotFound    = newError(http.StatusNotFound, "errors.com.epicgames.account.account_not_found", "Account not found", 18007)
+	InvalidToken       = newError(http.StatusUnauthorized, "errors.com.epicgames.common.authentication.token_verification_failed", "Token verification failed", 1014)
+	ValidationFailed   = newError(http.StatusBadRequest, "errors.com.epicgames.validation.validation_failed", "Validation failed", 1040)
+	CatalogOutOfDate   = newError(http.StatusBadRequest, "errors.com.epicgames.modules.gamesubcatalog.catalog_out_of_date", "Offer is no longer available", 28001)
+	PurchaseNotAllowed = newError(http.StatusBadRequest, "errors.com.epicgames.modules.gamesubcatalog.purchase_not_allowed", "Purchase not allowed", 28004)
+	NotEnoughVBucks    = newError(http.StatusBadRequest, "errors.com.epicgames.modules.gameplayutils.not_enough_mtx", "Not enough V-Bucks", 12720)
 )
 
 func OperationForbidden(profileID string) Error {

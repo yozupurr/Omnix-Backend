@@ -9,6 +9,7 @@ import (
 
 	"omnix/internal/account"
 	"omnix/internal/auth"
+	"omnix/internal/battlepass"
 	"omnix/internal/calendar"
 	"omnix/internal/catalog"
 	"omnix/internal/config"
@@ -33,7 +34,6 @@ type Server struct {
 	http *http.Server
 	xmpp *xmpp.Server
 	log  *slog.Logger
-	addr string
 }
 
 func New(cfg config.Config, log *slog.Logger) (*Server, error) {
@@ -41,7 +41,10 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Info("catalog loaded", "items", cosmetics.Len())
+	passes, err := battlepass.Load()
+	if err != nil {
+		return nil, err
+	}
 
 	accounts := account.NewStore()
 
@@ -56,9 +59,10 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	game.Register(mux)
 	lightswitch.Register(mux)
 	matchmaking.Register(mux)
-	profile.Register(mux, cosmetics)
+	shop := storefront.New(cosmetics, passes)
+	shop.Register(mux)
+	profile.Register(mux, shop)
 	receipts.Register(mux)
-	storefront.Register(mux, cosmetics)
 	versioncheck.Register(mux)
 	if err := storage.Register(mux, cfg.StorageDir); err != nil {
 		return nil, err
@@ -78,14 +82,12 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 		},
 		xmpp: chat,
 		log:  log,
-		addr: cfg.Addr,
 	}, nil
 }
 
 func (s *Server) Run(ctx context.Context) error {
 	failed := make(chan error, 2)
 	go func() {
-		s.log.Info("listening", "addr", s.addr)
 		if err := s.http.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			failed <- err
 		}

@@ -1,15 +1,20 @@
 package profile
 
-import (
-	"strings"
-	"sync"
+import "strings"
 
-	"omnix/internal/catalog"
+const (
+	sharedPlatform   = "Shared"
+	giveawayTemplate = "currency:mtxgiveaway"
+	bannerPrefix     = "HomebaseBannerIcon:"
 )
 
-var noVariants = []any{}
+type item struct {
+	TemplateID string `json:"templateId"`
+	Attributes any    `json:"attributes"`
+	Quantity   int    `json:"quantity"`
+}
 
-type itemAttributes struct {
+type cosmeticAttributes struct {
 	MaxLevelBonus int   `json:"max_level_bonus"`
 	Level         int   `json:"level"`
 	ItemSeen      int   `json:"item_seen"`
@@ -18,31 +23,22 @@ type itemAttributes struct {
 	Favorite      bool  `json:"favorite"`
 }
 
-type item struct {
-	TemplateID string         `json:"templateId"`
-	Attributes itemAttributes `json:"attributes"`
-	Quantity   int            `json:"quantity"`
+type currencyAttributes struct {
+	Platform string `json:"platform"`
 }
 
-type itemCache struct {
-	catalog *catalog.Catalog
-	seasons sync.Map
+func cosmetic(templateID string, quantity int, seen bool) item {
+	attributes := cosmeticAttributes{Level: 1, Variants: []any{}}
+	if seen {
+		attributes.ItemSeen = 1
+	}
+	return item{TemplateID: templateID, Attributes: attributes, Quantity: quantity}
 }
 
-func (c *itemCache) forSeason(season int) map[string]any {
-	if cached, ok := c.seasons.Load(season); ok {
-		return cached.(map[string]any)
-	}
-	available := c.catalog.Available(season)
-	items := make(map[string]any, len(available))
-	for _, cosmetic := range available {
-		id := cosmetic.Type + ":" + strings.ToLower(cosmetic.ID)
-		items[id] = item{
-			TemplateID: id,
-			Attributes: itemAttributes{Level: 1, ItemSeen: 1, Variants: noVariants},
-			Quantity:   1,
-		}
-	}
-	cached, _ := c.seasons.LoadOrStore(season, items)
-	return cached.(map[string]any)
+func currency(amount int) item {
+	return item{TemplateID: vbucksTemplate, Attributes: currencyAttributes{Platform: sharedPlatform}, Quantity: amount}
+}
+
+func isAthenaItem(templateID string) bool {
+	return strings.HasPrefix(templateID, "Athena") || strings.HasPrefix(templateID, "Token:")
 }

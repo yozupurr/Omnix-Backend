@@ -20,7 +20,6 @@ func Listen(addr string, log *slog.Logger, authenticate Authenticator) (*Server,
 	if err != nil {
 		return nil, err
 	}
-	log.Info("xmpp listening", "addr", listener.Addr().String())
 	return &Server{listener: listener, hub: newHub(), log: log, authenticate: authenticate}, nil
 }
 
