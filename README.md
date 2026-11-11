@@ -6,7 +6,8 @@ Universal OGFN backend written in Go.
 
 | Season | Versions |
 | --- | --- |
-| Season 1 | 1.8.1 |
+| Season 1 | 1.8.1 | Tested |
+| Season 2 | 1.11  | Tested |
 
 ## Features
 
