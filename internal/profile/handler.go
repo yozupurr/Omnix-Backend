@@ -31,6 +31,7 @@ func Register(mux *http.ServeMux, shop *storefront.Service) {
 	h := &handler{accounts: newStore(), shop: shop}
 	mux.HandleFunc(commandPath+"QueryProfile", h.queryProfile)
 	mux.HandleFunc(commandPath+"EquipBattleRoyaleCustomization", h.equip)
+	mux.HandleFunc(commandPath+"BulkEquipBattleRoyaleCustomization", h.bulkEquip)
 	mux.HandleFunc(commandPath+"PurchaseCatalogEntry", h.purchase)
 	mux.HandleFunc(commandPath+"MarkItemSeen", h.markSeen)
 	for _, command := range acknowledgedCommands {

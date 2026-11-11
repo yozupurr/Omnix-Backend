@@ -13,27 +13,54 @@ type equipRequest struct {
 	IndexWithinSlot int    `json:"indexWithinSlot"`
 }
 
+type bulkEquipRequest struct {
+	LoadoutData []equipRequest `json:"loadoutData"`
+}
+
 func (h *handler) equip(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Query().Get("profileId") != athenaProfile {
-		httpx.OperationForbidden(r.URL.Query().Get("profileId")).Write(w)
-		return
-	}
 	var req equipRequest
-	if !decode(w, r, &req) {
+	if !requireAthena(w, r) || !decode(w, r, &req) {
 		return
 	}
-	s, ok := slots[req.SlotName]
-	if !ok || req.IndexWithinSlot >= max(s.size, 1) {
-		httpx.InvalidRequest.Write(w)
+	h.applyEquips(w, r, []equipRequest{req})
+}
+
+func (h *handler) bulkEquip(w http.ResponseWriter, r *http.Request) {
+	var req bulkEquipRequest
+	if !requireAthena(w, r) || !decode(w, r, &req) {
 		return
 	}
-	h.accounts.with(r.PathValue("id"), func(a *account) {
-		if _, owned := a.athena[req.ItemToSlot]; req.ItemToSlot != "" && !owned {
+	h.applyEquips(w, r, req.LoadoutData)
+}
+
+func (h *handler) applyEquips(w http.ResponseWriter, r *http.Request, requests []equipRequest) {
+	for _, req := range requests {
+		s, ok := slots[req.SlotName]
+		if !ok || req.IndexWithinSlot >= max(s.size, 1) {
 			httpx.InvalidRequest.Write(w)
 			return
 		}
+	}
+	h.accounts.with(r.PathValue("id"), func(a *account) {
+		for _, req := range requests {
+			if _, owned := a.athena[req.ItemToSlot]; req.ItemToSlot != "" && !owned {
+				httpx.InvalidRequest.Write(w)
+				return
+			}
+		}
 		t := newTx(a, athenaProfile)
-		t.stat(s.stat, a.equip(s, req.ItemToSlot, req.IndexWithinSlot))
+		for _, req := range requests {
+			s := slots[req.SlotName]
+			t.stat(s.stat, a.equip(s, req.ItemToSlot, req.IndexWithinSlot))
+		}
 		httpx.JSON(w, http.StatusOK, t.commit(athenaProfile, nil, time.Now()))
 	})
+}
+
+func requireAthena(w http.ResponseWriter, r *http.Request) bool {
+	if profileID := r.URL.Query().Get("profileId"); profileID != athenaProfile {
+		httpx.OperationForbidden(profileID).Write(w)
+		return false
+	}
+	return true
 }
