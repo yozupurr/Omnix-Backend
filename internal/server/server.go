@@ -18,6 +18,7 @@ import (
 	"omnix/internal/eulatracking"
 	"omnix/internal/friends"
 	"omnix/internal/game"
+	"omnix/internal/keychain"
 	"omnix/internal/lightswitch"
 	"omnix/internal/matchmaking"
 	"omnix/internal/platform/httpx"
@@ -59,7 +60,11 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	game.Register(mux)
 	lightswitch.Register(mux)
 	matchmaking.Register(mux)
-	shop := storefront.New(cosmetics, passes)
+	keys, err := keychain.Load(cfg.KeychainFile)
+	if err != nil {
+		return nil, err
+	}
+	shop := storefront.New(cosmetics, passes, keys)
 	shop.Register(mux)
 	profile.Register(mux, shop)
 	receipts.Register(mux)

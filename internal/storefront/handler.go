@@ -6,6 +6,7 @@ import (
 
 	"omnix/internal/battlepass"
 	"omnix/internal/catalog"
+	"omnix/internal/keychain"
 	"omnix/internal/platform/httpx"
 	"omnix/internal/version"
 )
@@ -30,14 +31,20 @@ type Offer struct {
 type Service struct {
 	cosmetics *catalog.Catalog
 	passes    *battlepass.Catalog
+	keys      *keychain.Keychain
 }
 
-func New(cosmetics *catalog.Catalog, passes *battlepass.Catalog) *Service {
-	return &Service{cosmetics: cosmetics, passes: passes}
+func New(cosmetics *catalog.Catalog, passes *battlepass.Catalog, keys *keychain.Keychain) *Service {
+	return &Service{cosmetics: cosmetics, passes: passes, keys: keys}
 }
 
 func (s *Service) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /fortnite/api/storefront/v2/catalog", s.catalog)
+	mux.HandleFunc("GET /fortnite/api/storefront/v2/keychain", s.keychain)
+}
+
+func (s *Service) keychain(w http.ResponseWriter, _ *http.Request) {
+	httpx.JSON(w, http.StatusOK, s.keys.Keys())
 }
 
 func (s *Service) catalog(w http.ResponseWriter, r *http.Request) {
