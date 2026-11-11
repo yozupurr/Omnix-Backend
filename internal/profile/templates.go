@@ -5,6 +5,7 @@ import "maps"
 const (
 	athenaProfile     = "athena"
 	commonCoreProfile = "common_core"
+	commonPublic      = "common_public"
 	legacyProfile     = "profile0"
 	vbucksTemplate    = "Currency:MtxPurchased"
 	mtxPlatform       = "EpicPC"
@@ -20,6 +21,7 @@ var templates = map[string]template{
 	athenaProfile:     {stats: athenaStats, items: athenaItems},
 	commonCoreProfile: {stats: commonCoreStats, items: commonCoreItems, currency: true},
 	legacyProfile:     {stats: legacyStats, items: currencyItems, currency: true},
+	commonPublic:      {stats: publicStats, items: noItems},
 }
 
 func athenaStats(a *account, season int) map[string]any {
@@ -52,6 +54,14 @@ func legacyStats(a *account, season int) map[string]any {
 	stats["level"] = 1
 	stats["xp"] = 0
 	return stats
+}
+
+func publicStats(_ *account, _ int) map[string]any {
+	return map[string]any{"banner_icon": "", "banner_color": "", "homebase_name": ""}
+}
+
+func noItems(_ *account) map[string]item {
+	return map[string]item{}
 }
 
 func athenaItems(a *account) map[string]item {

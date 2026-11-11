@@ -14,6 +14,7 @@ var noUpdate = response{Type: "NO_UPDATE"}
 
 func Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /fortnite/api/versioncheck", check)
+	mux.HandleFunc("GET /fortnite/api/v2/versioncheck/{platform}", check)
 }
 
 func check(w http.ResponseWriter, _ *http.Request) {
