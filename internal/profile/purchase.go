@@ -1,7 +1,9 @@
 package profile
 
 import (
+	"maps"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -71,6 +73,12 @@ func (h *handler) purchase(w http.ResponseWriter, r *http.Request) {
 		a.vbucks -= total
 		t.vbucksChanged()
 		loot := t.fulfill(offer, quantity)
+		switch offer.Kind {
+		case storefront.KindPass, storefront.KindBundle:
+			t.giftBox(passGiftBox, loot, now)
+		case storefront.KindTier:
+			t.giftBox(tierGiftBox, loot, now)
+		}
 		notification := purchaseNotification{Type: "CatalogPurchase", Primary: true, LootResult: lootResult{Items: loot}}
 		httpx.JSON(w, http.StatusOK, t.commit(wallet, []any{notification}, now))
 	})
@@ -125,8 +133,8 @@ func (t *tx) levelUp(pass battlepass.Season, tiers int, loot []lootItem) []lootI
 }
 
 func (t *tx) grantAll(rewards battlepass.Rewards, loot []lootItem) []lootItem {
-	for templateID, quantity := range rewards {
-		loot = t.grant(templateID, quantity, loot)
+	for _, templateID := range slices.Sorted(maps.Keys(rewards)) {
+		loot = t.grant(templateID, rewards[templateID], loot)
 	}
 	return loot
 }

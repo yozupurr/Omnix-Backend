@@ -78,6 +78,9 @@ func commonCoreItems(a *account) map[string]item {
 	for id, quantity := range a.banners {
 		items[id] = cosmetic(id, quantity, true)
 	}
+	for id, box := range a.giftBoxes {
+		items[id] = box.item()
+	}
 	return items
 }
 

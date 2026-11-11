@@ -34,6 +34,7 @@ func Register(mux *http.ServeMux, shop *storefront.Service) {
 	mux.HandleFunc(commandPath+"BulkEquipBattleRoyaleCustomization", h.bulkEquip)
 	mux.HandleFunc(commandPath+"PurchaseCatalogEntry", h.purchase)
 	mux.HandleFunc(commandPath+"MarkItemSeen", h.markSeen)
+	mux.HandleFunc(commandPath+"RemoveGiftBox", h.removeGiftBox)
 	for _, command := range acknowledgedCommands {
 		mux.HandleFunc(commandPath+command, h.acknowledge)
 	}

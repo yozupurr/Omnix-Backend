@@ -17,6 +17,7 @@ type account struct {
 	banners   map[string]int
 	favorites map[string]any
 	books     map[int]*book
+	giftBoxes map[string]giftBox
 	revisions map[string]int
 }
 
@@ -33,6 +34,7 @@ func newAccount() *account {
 		banners:   map[string]int{},
 		favorites: newFavorites(),
 		books:     map[int]*book{},
+		giftBoxes: map[string]giftBox{},
 		revisions: map[string]int{},
 	}
 	for _, id := range starterItems {
