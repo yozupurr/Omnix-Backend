@@ -17,6 +17,7 @@ Universal OGFN backend written in Go.
 | Season 9 | 9.0   |
 | Season X | 10.0  |
 | Season 11| 11.0  |
+| Season 12| 12.0  |
 
 ## Features
 
@@ -27,5 +28,5 @@ Universal OGFN backend written in Go.
 
 ## crédit
 
-- [@burlone0](https://github.com/burlone0) — Battle Pass Season 2 to 20 (except 18)
+- [@burlone0](https://github.com/burlone0) — Battle Pass Season 2 to 20 (except 18 and 12)
 - [@Lawin0129](https://github.com/Lawin0129) — Keychain
