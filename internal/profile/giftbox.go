@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	passGiftBox = "GiftBox:gb_battlepasspurchased"
-	tierGiftBox = "GiftBox:gb_battlepass"
+	battlePassGiftBox           = "GiftBox:gb_battlepass"
+	battlePassPurchasedGiftBox  = "GiftBox:gb_battlepasspurchased"
+	firstPurchasedGiftBoxSeason = 5
 )
 
 type giftBox struct {
@@ -43,6 +44,13 @@ func (r removeGiftBoxRequest) ids() []string {
 		return r.GiftBoxItemIDs
 	}
 	return append(r.GiftBoxItemIDs, r.GiftBoxItemID)
+}
+
+func passGiftBox(season int) string {
+	if season < firstPurchasedGiftBoxSeason {
+		return battlePassGiftBox
+	}
+	return battlePassPurchasedGiftBox
 }
 
 func (g giftBox) item() item {

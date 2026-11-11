@@ -75,9 +75,9 @@ func (h *handler) purchase(w http.ResponseWriter, r *http.Request) {
 		loot := t.fulfill(offer, quantity)
 		switch offer.Kind {
 		case storefront.KindPass, storefront.KindBundle:
-			t.giftBox(passGiftBox, loot, now)
+			t.giftBox(passGiftBox(offer.Pass.Number), loot, now)
 		case storefront.KindTier:
-			t.giftBox(tierGiftBox, loot, now)
+			t.giftBox(battlePassGiftBox, loot, now)
 		}
 		notification := purchaseNotification{Type: "CatalogPurchase", Primary: true, LootResult: lootResult{Items: loot}}
 		httpx.JSON(w, http.StatusOK, t.commit(wallet, []any{notification}, now))
