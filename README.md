@@ -11,6 +11,7 @@ Universal OGFN backend written in Go.
 | Season 3 | 3.0   | 
 | Season 4 | 4.0   | 
 | Season 5 | 5.0   | 
+| Season 6 | 6.0   |
 ## Features
 
 - Authentication
