@@ -40,6 +40,7 @@ type handler struct {
 
 func Register(mux *http.ServeMux, store *Store) {
 	h := handler{store: store}
+	mux.HandleFunc("GET /account/api/public/account", h.bulk)
 	mux.HandleFunc("GET /account/api/public/account/{id}", h.get)
 	mux.HandleFunc("GET /account/api/public/account/{id}/externalAuths", h.externalAuths)
 	mux.HandleFunc("GET /account/api/epicdomains/ssodomains", domains)
@@ -56,6 +57,23 @@ func (h handler) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.JSON(w, http.StatusOK, newResponse(account))
+}
+
+type summary struct {
+	ID            string         `json:"id"`
+	DisplayName   string         `json:"displayName"`
+	ExternalAuths map[string]any `json:"externalAuths"`
+}
+
+func (h handler) bulk(w http.ResponseWriter, r *http.Request) {
+	ids := r.URL.Query()["accountId"]
+	found := make([]summary, 0, len(ids))
+	for _, id := range ids {
+		if account, ok := h.store.Find(id); ok {
+			found = append(found, summary{ID: account.ID, DisplayName: account.DisplayName, ExternalAuths: map[string]any{}})
+		}
+	}
+	httpx.JSON(w, http.StatusOK, found)
 }
 
 func (h handler) externalAuths(w http.ResponseWriter, r *http.Request) {

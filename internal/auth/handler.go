@@ -48,13 +48,28 @@ func (h handler) token(w http.ResponseWriter, r *http.Request) {
 			httpx.InvalidRequest.Write(w)
 			return
 		}
-		user := h.accounts.FindOrCreate(username, now)
-		issued := newUserToken(clientID, user, now)
-		h.sessions.save(issued, now)
-		httpx.JSON(w, http.StatusOK, issued)
+		h.issue(w, clientID, h.accounts.FindOrCreate(username, now), now)
+	case "refresh_token":
+		previous, ok := h.sessions.redeem(r.PostForm.Get("refresh_token"), now)
+		if !ok {
+			httpx.InvalidRefreshToken.Write(w)
+			return
+		}
+		user, ok := h.accounts.Find(previous.AccountID)
+		if !ok {
+			httpx.AccountNotFound.Write(w)
+			return
+		}
+		h.issue(w, clientID, user, now)
 	default:
 		httpx.UnsupportedGrant.Write(w)
 	}
+}
+
+func (h handler) issue(w http.ResponseWriter, clientID string, user account.Account, now time.Time) {
+	issued := newUserToken(clientID, user, now)
+	h.sessions.save(issued, now)
+	httpx.JSON(w, http.StatusOK, issued)
 }
 
 func (h handler) verify(w http.ResponseWriter, r *http.Request) {
