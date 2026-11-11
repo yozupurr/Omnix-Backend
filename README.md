@@ -4,13 +4,13 @@ Universal OGFN backend written in Go.
 
 ## Version support
 
-| Season | Versions |
+| Season | Versions Tested|
 | --- | --- |
-| Season 1 | 1.8.1 | Tested |
-| Season 2 | 1.11  | Tested |
-| Season 3 | 3.0   | Tested |
-| Season 4 | 4.0   | Tested |
-| Season 5 | 5.0   | Tested |
+| Season 1 | 1.8.1 |
+| Season 2 | 1.11  | 
+| Season 3 | 3.0   | 
+| Season 4 | 4.0   | 
+| Season 5 | 5.0   | 
 ## Features
 
 - Authentication
