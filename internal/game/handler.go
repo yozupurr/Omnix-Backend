@@ -12,6 +12,11 @@ type worldInfo struct {
 	MissionAlerts []any `json:"missionAlerts"`
 }
 
+type privacy struct {
+	AccountID                  string `json:"accountId"`
+	OptOutOfPublicLeaderboards bool   `json:"optOutOfPublicLeaderboards"`
+}
+
 var emptyWorld = worldInfo{
 	Theaters:      []any{},
 	Missions:      []any{},
@@ -24,6 +29,11 @@ func Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /fortnite/api/game/v2/enabled_features", enabledFeatures)
 	mux.HandleFunc("POST /fortnite/api/game/v2/grant_access/{id}", grantAccess)
 	mux.HandleFunc("GET /fortnite/api/game/v2/friendcodes/{id}/{platform}", friendCodes)
+	mux.HandleFunc("GET /fortnite/api/game/v2/privacy/account/{id}", privacySettings)
+}
+
+func privacySettings(w http.ResponseWriter, r *http.Request) {
+	httpx.JSON(w, http.StatusOK, privacy{AccountID: r.PathValue("id")})
 }
 
 func worldInformation(w http.ResponseWriter, _ *http.Request) {

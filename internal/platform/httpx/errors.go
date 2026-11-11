@@ -24,6 +24,7 @@ var (
 	CatalogOutOfDate    = newError(http.StatusBadRequest, "errors.com.epicgames.modules.gamesubcatalog.catalog_out_of_date", "Offer is no longer available", 28001)
 	PurchaseNotAllowed  = newError(http.StatusBadRequest, "errors.com.epicgames.modules.gamesubcatalog.purchase_not_allowed", "Purchase not allowed", 28004)
 	NotEnoughVBucks     = newError(http.StatusBadRequest, "errors.com.epicgames.modules.gameplayutils.not_enough_mtx", "Not enough V-Bucks", 12720)
+	PartyNotFound       = newError(http.StatusNotFound, "errors.com.epicgames.social.party.party_not_found", "Party not found", 51002)
 )
 
 func OperationForbidden(profileID string) Error {

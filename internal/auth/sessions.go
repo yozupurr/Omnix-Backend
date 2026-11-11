@@ -62,3 +62,13 @@ func (s *sessions) find(accessToken string, now time.Time) (userToken, bool) {
 	token.ExpiresIn = int(active.expires.Sub(now).Seconds())
 	return token, true
 }
+
+func (s *sessions) revoke(accessToken string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if active, ok := s.tokens[accessToken]; ok {
+		delete(s.refreshes, active.token.RefreshToken)
+		delete(s.tokens, accessToken)
+	}
+}

@@ -6,6 +6,7 @@ const (
 	athenaProfile     = "athena"
 	commonCoreProfile = "common_core"
 	commonPublic      = "common_public"
+	creativeProfile   = "creative"
 	legacyProfile     = "profile0"
 	vbucksTemplate    = "Currency:MtxPurchased"
 	mtxPlatform       = "EpicPC"
@@ -13,7 +14,7 @@ const (
 
 type template struct {
 	stats    func(a *account, season int) map[string]any
-	items    func(a *account) map[string]item
+	items    func(a *account, season int) map[string]item
 	currency bool
 }
 
@@ -22,6 +23,7 @@ var templates = map[string]template{
 	commonCoreProfile: {stats: commonCoreStats, items: commonCoreItems, currency: true},
 	legacyProfile:     {stats: legacyStats, items: currencyItems, currency: true},
 	commonPublic:      {stats: publicStats, items: noItems},
+	creativeProfile:   {stats: noStats, items: noItems},
 }
 
 func athenaStats(a *account, season int) map[string]any {
@@ -38,6 +40,9 @@ func athenaStats(a *account, season int) map[string]any {
 		"past_seasons":   []any{},
 	}
 	maps.Copy(stats, a.snapshotFavorites())
+	if usesCosmeticLocker(season) {
+		maps.Copy(stats, lockerStats())
+	}
 	return stats
 }
 
@@ -60,21 +65,31 @@ func publicStats(_ *account, _ int) map[string]any {
 	return map[string]any{"banner_icon": "", "banner_color": "", "homebase_name": ""}
 }
 
-func noItems(_ *account) map[string]item {
+func noStats(_ *account, _ int) map[string]any {
+	return map[string]any{}
+}
+
+func noItems(_ *account, _ int) map[string]item {
 	return map[string]item{}
 }
 
-func athenaItems(a *account) map[string]item {
+func athenaItems(a *account, season int) map[string]item {
 	items := make(map[string]item, len(a.athena))
 	for id, quantity := range a.athena {
+		if !availableIn(id, season) {
+			continue
+		}
 		_, seen := a.seen[id]
 		items[id] = cosmetic(id, quantity, seen)
+	}
+	if usesCosmeticLocker(season) {
+		items[lockerItemID] = a.locker()
 	}
 	return items
 }
 
-func commonCoreItems(a *account) map[string]item {
-	items := currencyItems(a)
+func commonCoreItems(a *account, season int) map[string]item {
+	items := currencyItems(a, season)
 	for id, quantity := range a.banners {
 		items[id] = cosmetic(id, quantity, true)
 	}
@@ -84,6 +99,6 @@ func commonCoreItems(a *account) map[string]item {
 	return items
 }
 
-func currencyItems(a *account) map[string]item {
+func currencyItems(a *account, _ int) map[string]item {
 	return map[string]item{vbucksTemplate: currency(a.vbucks)}
 }

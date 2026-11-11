@@ -4,21 +4,17 @@ import "sync"
 
 const startingVBucks = 10000
 
-var starterItems = []string{
-	"AthenaPickaxe:DefaultPickaxe",
-	"AthenaGlider:DefaultGlider",
-	"AthenaDance:EID_DanceMoves",
-}
-
 type account struct {
-	vbucks    int
-	athena    map[string]int
-	seen      map[string]struct{}
-	banners   map[string]int
-	favorites map[string]any
-	books     map[int]*book
-	giftBoxes map[string]giftBox
-	revisions map[string]int
+	vbucks      int
+	athena      map[string]int
+	seen        map[string]struct{}
+	banners     map[string]int
+	favorites   map[string]any
+	bannerIcon  string
+	bannerColor string
+	books       map[int]*book
+	giftBoxes   map[string]giftBox
+	revisions   map[string]int
 }
 
 type book struct {
@@ -37,11 +33,16 @@ func newAccount() *account {
 		giftBoxes: map[string]giftBox{},
 		revisions: map[string]int{},
 	}
-	for _, id := range starterItems {
+	for id := range starterItems {
 		a.athena[id] = 1
 		a.seen[id] = struct{}{}
 	}
 	return a
+}
+
+func (a *account) owns(templateID string, season int) bool {
+	_, owned := a.athena[templateID]
+	return owned && availableIn(templateID, season)
 }
 
 func (a *account) book(season int) *book {

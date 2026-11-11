@@ -35,7 +35,7 @@ func (s *session) run() {
 	for {
 		token, err := decoder.Token()
 		if err != nil {
-			s.server.log.Debug("xmpp stream ended", "reason", err.Error(), "authenticated", s.authenticated)
+			s.server.log.Info("xmpp stream ended", "reason", err.Error(), "account", s.accountID)
 			return
 		}
 		switch t := token.(type) {
@@ -49,7 +49,13 @@ func (s *session) run() {
 				continue
 			}
 			var n node
-			if decoder.DecodeElement(&n, &t) != nil || !s.dispatch(n) {
+			if err := decoder.DecodeElement(&n, &t); err != nil {
+				s.server.log.Warn("xmpp invalid stanza", "name", t.Name.Local, "reason", err.Error(), "account", s.accountID)
+				s.fail()
+				return
+			}
+			if !s.dispatch(n) {
+				s.server.log.Warn("xmpp stanza rejected", "name", n.XMLName.Local, "type", n.attr("type"), "to", n.attr("to"), "account", s.accountID)
 				s.fail()
 				return
 			}

@@ -87,7 +87,7 @@ func render(a *account, accountID, profileID string, season int, now time.Time) 
 		AccountID:       accountID,
 		ProfileID:       profileID,
 		Version:         profileVersion,
-		Items:           t.items(a),
+		Items:           t.items(a, season),
 		Stats:           stats{Attributes: t.stats(a, season)},
 		CommandRevision: revision,
 	}

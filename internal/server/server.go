@@ -12,6 +12,7 @@ import (
 	"omnix/internal/battlepass"
 	"omnix/internal/calendar"
 	"omnix/internal/catalog"
+	"omnix/internal/channels"
 	"omnix/internal/config"
 	"omnix/internal/content"
 	"omnix/internal/datarouter"
@@ -21,9 +22,12 @@ import (
 	"omnix/internal/keychain"
 	"omnix/internal/lightswitch"
 	"omnix/internal/matchmaking"
+	"omnix/internal/party"
 	"omnix/internal/platform/httpx"
+	"omnix/internal/presence"
 	"omnix/internal/profile"
 	"omnix/internal/receipts"
+	"omnix/internal/socialban"
 	"omnix/internal/storage"
 	"omnix/internal/storefront"
 	"omnix/internal/version"
@@ -53,6 +57,7 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	account.Register(mux, accounts)
 	authenticate := auth.Register(mux, accounts)
 	calendar.Register(mux)
+	channels.Register(mux)
 	content.Register(mux)
 	datarouter.Register(mux)
 	eulatracking.Register(mux)
@@ -60,6 +65,8 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	game.Register(mux)
 	lightswitch.Register(mux)
 	matchmaking.Register(mux)
+	party.Register(mux)
+	presence.Register(mux)
 	keys, err := keychain.Load(cfg.KeychainFile)
 	if err != nil {
 		return nil, err
@@ -68,6 +75,7 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	shop.Register(mux)
 	profile.Register(mux, shop)
 	receipts.Register(mux)
+	socialban.Register(mux)
 	versioncheck.Register(mux)
 	if err := storage.Register(mux, cfg.StorageDir); err != nil {
 		return nil, err

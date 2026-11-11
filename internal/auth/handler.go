@@ -19,6 +19,7 @@ func Register(mux *http.ServeMux, accounts *account.Store) func(accessToken stri
 	mux.HandleFunc("POST /account/api/oauth/token", h.token)
 	mux.HandleFunc("GET /account/api/oauth/verify", h.verify)
 	mux.HandleFunc("DELETE /account/api/oauth/sessions/kill", killSessions)
+	mux.HandleFunc("DELETE /account/api/oauth/sessions/kill/{token}", h.killSession)
 	return h.authenticate
 }
 
@@ -81,6 +82,11 @@ func (h handler) verify(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	httpx.InvalidToken.Write(w)
+}
+
+func (h handler) killSession(w http.ResponseWriter, r *http.Request) {
+	h.sessions.revoke(r.PathValue("token"))
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func killSessions(w http.ResponseWriter, _ *http.Request) {

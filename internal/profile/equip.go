@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"omnix/internal/platform/httpx"
+	"omnix/internal/version"
 )
 
 type equipRequest struct {
@@ -41,9 +42,10 @@ func (h *handler) applyEquips(w http.ResponseWriter, r *http.Request, requests [
 			return
 		}
 	}
+	season := version.From(r.Context()).Season()
 	h.accounts.with(r.PathValue("id"), func(a *account) {
 		for _, req := range requests {
-			if _, owned := a.athena[req.ItemToSlot]; req.ItemToSlot != "" && !owned {
+			if req.ItemToSlot != "" && !a.owns(req.ItemToSlot, season) {
 				httpx.InvalidRequest.Write(w)
 				return
 			}
