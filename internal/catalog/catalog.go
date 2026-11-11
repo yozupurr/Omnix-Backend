@@ -13,6 +13,7 @@ type Item struct {
 	ID     string `json:"id"`
 	Type   string `json:"type"`
 	Season int    `json:"season"`
+	Rarity string `json:"rarity,omitempty"`
 }
 
 type Catalog struct {

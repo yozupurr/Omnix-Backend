@@ -15,6 +15,8 @@ type Build struct {
 
 type contextKey struct{}
 
+const firstSeasonTwoChangelist = 3785000
+
 var (
 	changelistPattern = regexp.MustCompile(`(?:CL-|\d+\.\d+\.\d+-)(\d+)`)
 	releasePattern    = regexp.MustCompile(`Release-(\d+(?:\.\d+)?)`)
@@ -32,6 +34,12 @@ func Parse(userAgent string) Build {
 }
 
 func (b Build) Season() int {
+	if b.Release == "" {
+		if b.CL >= firstSeasonTwoChangelist {
+			return 2
+		}
+		return 1
+	}
 	major, _, _ := strings.Cut(b.Release, ".")
 	season, err := strconv.Atoi(major)
 	if err != nil || season < 1 {

@@ -58,7 +58,7 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	matchmaking.Register(mux)
 	profile.Register(mux, cosmetics)
 	receipts.Register(mux)
-	storefront.Register(mux)
+	storefront.Register(mux, cosmetics)
 	versioncheck.Register(mux)
 	if err := storage.Register(mux, cfg.StorageDir); err != nil {
 		return nil, err

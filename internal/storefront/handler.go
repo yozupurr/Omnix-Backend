@@ -2,28 +2,23 @@ package storefront
 
 import (
 	"net/http"
+	"time"
 
+	"omnix/internal/catalog"
 	"omnix/internal/platform/httpx"
+	"omnix/internal/version"
 )
 
-type catalog struct {
-	RefreshIntervalHrs int    `json:"refreshIntervalHrs"`
-	DailyPurchaseHrs   int    `json:"dailyPurchaseHrs"`
-	Expiration         string `json:"expiration"`
-	Storefronts        []any  `json:"storefronts"`
+type handler struct {
+	cosmetics *catalog.Catalog
 }
 
-var empty = catalog{
-	RefreshIntervalHrs: 1,
-	DailyPurchaseHrs:   24,
-	Expiration:         "9999-12-31T23:59:59.999Z",
-	Storefronts:        []any{},
+func Register(mux *http.ServeMux, cosmetics *catalog.Catalog) {
+	h := handler{cosmetics: cosmetics}
+	mux.HandleFunc("GET /fortnite/api/storefront/v2/catalog", h.catalog)
 }
 
-func Register(mux *http.ServeMux) {
-	mux.HandleFunc("GET /fortnite/api/storefront/v2/catalog", getCatalog)
-}
-
-func getCatalog(w http.ResponseWriter, _ *http.Request) {
-	httpx.JSON(w, http.StatusOK, empty)
+func (h handler) catalog(w http.ResponseWriter, r *http.Request) {
+	season := version.From(r.Context()).Season()
+	httpx.JSON(w, http.StatusOK, newShop(h.cosmetics.Available(max(season-1, 1)), season, time.Now()))
 }

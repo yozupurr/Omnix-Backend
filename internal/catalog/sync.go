@@ -28,6 +28,9 @@ type apiResponse struct {
 		Type struct {
 			BackendValue string `json:"backendValue"`
 		} `json:"type"`
+		Rarity struct {
+			Value string `json:"value"`
+		} `json:"rarity"`
 		Introduction *struct {
 			BackendValue int `json:"backendValue"`
 		} `json:"introduction"`
@@ -64,7 +67,12 @@ func Fetch(ctx context.Context) ([]Item, error) {
 		if c.Introduction == nil || c.Introduction.BackendValue <= 0 {
 			continue
 		}
-		items = append(items, Item{ID: c.ID, Type: c.Type.BackendValue, Season: c.Introduction.BackendValue})
+		items = append(items, Item{
+			ID:     c.ID,
+			Type:   c.Type.BackendValue,
+			Season: c.Introduction.BackendValue,
+			Rarity: c.Rarity.Value,
+		})
 	}
 	return New(items).items, nil
 }

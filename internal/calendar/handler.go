@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"omnix/internal/platform/httpx"
+	"omnix/internal/storefront"
 	"omnix/internal/version"
 )
 
 const (
 	farPast           = "2017-01-01T00:00:00.000Z"
-	farFuture         = "9999-12-31T23:59:59.999Z"
 	cacheIntervalMins = 10
 )
 
@@ -62,31 +62,34 @@ func getTimeline(w http.ResponseWriter, r *http.Request) {
 }
 
 func newTimeline(season int, now time.Time) timeline {
+	rotation := httpx.Timestamp(storefront.NextRotation(now))
+	local := now.Local()
+	seasonEnd := httpx.Timestamp(time.Date(local.Year(), local.Month()+1, 1, 0, 0, 0, 0, time.Local))
 	return timeline{
 		Channels: map[string]channel{
-			"client-matchmaking": newChannel(matchmakingState{Region: map[string]any{}}),
+			"client-matchmaking": newChannel(matchmakingState{Region: map[string]any{}}, rotation),
 			"client-events": newChannel(eventsState{
 				ActiveStorefronts:  []any{},
 				EventNamedWeights:  map[string]any{},
 				SeasonNumber:       season,
 				SeasonTemplateID:   fmt.Sprintf("AthenaSeason:athenaseason%d", season),
 				SeasonBegin:        farPast,
-				SeasonEnd:          farFuture,
-				SeasonDisplayedEnd: farFuture,
-				WeeklyStoreEnd:     farFuture,
-				STWEventStoreEnd:   farFuture,
-				STWWeeklyStoreEnd:  farFuture,
-				DailyStoreEnd:      farFuture,
-			}),
+				SeasonEnd:          seasonEnd,
+				SeasonDisplayedEnd: seasonEnd,
+				WeeklyStoreEnd:     rotation,
+				STWEventStoreEnd:   rotation,
+				STWWeeklyStoreEnd:  rotation,
+				DailyStoreEnd:      rotation,
+			}, rotation),
 		},
 		CacheIntervalMins: cacheIntervalMins,
 		CurrentTime:       httpx.Timestamp(now),
 	}
 }
 
-func newChannel(content any) channel {
+func newChannel(content any, expire string) channel {
 	return channel{
 		States:      []state{{ValidFrom: farPast, ActiveEvents: []any{}, State: content}},
-		CacheExpire: farFuture,
+		CacheExpire: expire,
 	}
 }
