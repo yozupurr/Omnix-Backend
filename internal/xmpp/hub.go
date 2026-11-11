@@ -132,3 +132,9 @@ func (h *hub) closeAll() {
 		c.conn.close()
 	}
 }
+
+func (h *hub) client(accountID string) *client {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return h.clients[accountID]
+}

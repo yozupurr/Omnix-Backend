@@ -4,7 +4,10 @@ import (
 	"errors"
 	"log/slog"
 	"net"
+	"strings"
 )
+
+const adminUser = "xmpp-admin"
 
 type Authenticator func(token string) (accountID, displayName string, ok bool)
 
@@ -39,4 +42,14 @@ func (s *Server) Serve() error {
 func (s *Server) Close() {
 	s.listener.Close()
 	s.hub.closeAll()
+}
+
+func (s *Server) Send(accountID, body string) {
+	c := s.hub.client(accountID)
+	if c == nil {
+		return
+	}
+	_, host, _ := strings.Cut(c.jid, "@")
+	domain, _, _ := strings.Cut(host, "/")
+	c.send(message(c.jid, adminUser+"@"+domain, "", "", body))
 }

@@ -65,7 +65,6 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	game.Register(mux)
 	lightswitch.Register(mux)
 	matchmaking.Register(mux)
-	party.Register(mux)
 	presence.Register(mux)
 	keys, err := keychain.Load(cfg.KeychainFile)
 	if err != nil {
@@ -86,6 +85,7 @@ func New(cfg config.Config, log *slog.Logger) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	party.Register(mux, chat)
 
 	return &Server{
 		http: &http.Server{

@@ -13,8 +13,9 @@ import (
 const maxBody = 1 << 16
 
 type store struct {
-	mu      sync.Mutex
-	parties map[string]*party
+	mu       sync.Mutex
+	parties  map[string]*party
+	notifier Notifier
 }
 
 type userParties struct {
@@ -45,8 +46,8 @@ type joinResponse struct {
 	PartyID string `json:"party_id"`
 }
 
-func Register(mux *http.ServeMux) {
-	s := &store{parties: map[string]*party{}}
+func Register(mux *http.ServeMux, notifier Notifier) {
+	s := &store{parties: map[string]*party{}, notifier: notifier}
 	mux.HandleFunc("GET /party/api/v1/Fortnite/user/{accountId}", s.user)
 	mux.HandleFunc("GET /party/api/v1/Fortnite/user/{accountId}/notifications/undelivered/count", undelivered)
 	mux.HandleFunc("POST /party/api/v1/Fortnite/parties", s.create)
@@ -116,10 +117,12 @@ func (s *store) update(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	now := time.Now()
 	maps.Copy(p.Config, req.Config)
 	p.Meta.apply(req.Meta)
-	p.touch(time.Now())
+	p.touch(now)
 	w.WriteHeader(http.StatusNoContent)
+	s.deliver(partyUpdate(p, req.Meta, now), p.recipients())
 }
 
 func (s *store) updateMember(w http.ResponseWriter, r *http.Request) {
@@ -144,6 +147,7 @@ func (s *store) updateMember(w http.ResponseWriter, r *http.Request) {
 	m.UpdatedAt = httpx.Timestamp(now)
 	p.touch(now)
 	w.WriteHeader(http.StatusNoContent)
+	s.deliver(memberUpdate(p, m, req, now), p.recipients())
 }
 
 func (s *store) join(w http.ResponseWriter, r *http.Request) {
@@ -158,9 +162,13 @@ func (s *store) join(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
+	now := time.Now()
 	s.removeEverywhere(accountID)
-	p.join(accountID, req, time.Now())
+	p.join(accountID, req, now)
 	httpx.JSON(w, http.StatusOK, joinResponse{Status: "JOINED", PartyID: p.ID})
+	if m, ok := p.member(accountID); ok {
+		s.deliver(memberJoin(p, m, now), p.recipients())
+	}
 }
 
 func (s *store) promote(w http.ResponseWriter, r *http.Request) {
@@ -185,13 +193,19 @@ func (s *store) leave(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if p.leave(r.PathValue("accountId")) {
-		p.touch(time.Now())
+	accountID := r.PathValue("accountId")
+	now := time.Now()
+	left := p.leave(accountID)
+	if left {
+		p.touch(now)
 	}
 	if len(p.Members) == 0 {
 		delete(s.parties, p.ID)
 	}
 	w.WriteHeader(http.StatusNoContent)
+	if left {
+		s.deliver(memberLeave(p, accountID, now), p.recipients(accountID))
+	}
 }
 
 func (s *store) find(w http.ResponseWriter, r *http.Request) (*party, bool) {
