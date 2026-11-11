@@ -12,6 +12,7 @@ import (
 
 const (
 	farPast           = "2017-01-01T00:00:00.000Z"
+	farFuture         = "9999-12-31T23:59:59.999Z"
 	cacheIntervalMins = 10
 )
 
@@ -28,9 +29,9 @@ type channel struct {
 }
 
 type state struct {
-	ValidFrom    string `json:"validFrom"`
-	ActiveEvents []any  `json:"activeEvents"`
-	State        any    `json:"state"`
+	ValidFrom    string        `json:"validFrom"`
+	ActiveEvents []activeEvent `json:"activeEvents"`
+	State        any           `json:"state"`
 }
 
 type matchmakingState struct {
@@ -57,17 +58,17 @@ func Register(mux *http.ServeMux) {
 }
 
 func getTimeline(w http.ResponseWriter, r *http.Request) {
-	season := version.From(r.Context()).Season()
-	httpx.JSON(w, http.StatusOK, newTimeline(season, time.Now()))
+	httpx.JSON(w, http.StatusOK, newTimeline(version.From(r.Context()), time.Now()))
 }
 
-func newTimeline(season int, now time.Time) timeline {
+func newTimeline(build version.Build, now time.Time) timeline {
+	season := build.Season()
 	rotation := httpx.Timestamp(storefront.NextRotation(now))
 	local := now.Local()
 	seasonEnd := httpx.Timestamp(time.Date(local.Year(), local.Month()+1, 1, 0, 0, 0, 0, time.Local))
 	return timeline{
 		Channels: map[string]channel{
-			"client-matchmaking": newChannel(matchmakingState{Region: map[string]any{}}, rotation),
+			"client-matchmaking": newChannel(matchmakingState{Region: map[string]any{}}, nil, rotation),
 			"client-events": newChannel(eventsState{
 				ActiveStorefronts:  []any{},
 				EventNamedWeights:  map[string]any{},
@@ -80,16 +81,19 @@ func newTimeline(season int, now time.Time) timeline {
 				STWEventStoreEnd:   rotation,
 				STWWeeklyStoreEnd:  rotation,
 				DailyStoreEnd:      rotation,
-			}, rotation),
+			}, activeEvents(build), rotation),
 		},
 		CacheIntervalMins: cacheIntervalMins,
 		CurrentTime:       httpx.Timestamp(now),
 	}
 }
 
-func newChannel(content any, expire string) channel {
+func newChannel(content any, events []activeEvent, expire string) channel {
+	if events == nil {
+		events = []activeEvent{}
+	}
 	return channel{
-		States:      []state{{ValidFrom: farPast, ActiveEvents: []any{}, State: content}},
+		States:      []state{{ValidFrom: farPast, ActiveEvents: events, State: content}},
 		CacheExpire: expire,
 	}
 }

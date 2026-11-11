@@ -48,6 +48,16 @@ func (b Build) Season() int {
 	return season
 }
 
+func (b Build) AtLeast(major, minor int) bool {
+	majorText, minorText, _ := strings.Cut(b.Release, ".")
+	m, err := strconv.Atoi(majorText)
+	if err != nil {
+		return false
+	}
+	n, _ := strconv.Atoi(minorText)
+	return m > major || m == major && n >= minor
+}
+
 func Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), contextKey{}, Parse(r.UserAgent()))
