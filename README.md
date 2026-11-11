@@ -16,6 +16,8 @@ Universal OGFN backend written in Go.
 | Season 8 | 8.0   |
 | Season 9 | 9.0   |
 | Season X | 10.0  |
+| Season 11| 11.0  |
+
 ## Features
 
 - Authentication
